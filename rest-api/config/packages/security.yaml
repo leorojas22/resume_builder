@@ -21,8 +21,11 @@ security:
             guard:
                 authenticators:
                     - App\Security\LoginAuthenticator
+                    - App\Security\JwtAuthenticator
+                entry_point: App\Security\LoginAuthenticator
             logout:
                 path: api_logout
+            stateless: true
             # activate different ways to authenticate
 
             # http_basic: true
