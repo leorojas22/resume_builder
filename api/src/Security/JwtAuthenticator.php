@@ -2,6 +2,9 @@
 
 namespace App\Security;
 
+use Firebase\JWT\JWT;
+use Firebase\JWT\ExpiredException;
+use Firebase\JWT\SignatureInvalidException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -9,29 +12,39 @@ use Symfony\Component\Security\Core\User\UserProviderInterface;
 use Symfony\Component\Security\Guard\AbstractGuardAuthenticator;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
-use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
-use Firebase\JWT\JWT;
+use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException;
+use App\Service\JwtService;
 
-class LoginAuthenticator extends AbstractGuardAuthenticator
+class JwtAuthenticator extends AbstractGuardAuthenticator
 {
 
-    private $passwordEncoder;
-    public function __construct(UserPasswordEncoderInterface $passwordEncoder)
+    private $jwtService;
+
+    public function __construct(JwtService $jwtService)
     {
-        $this->passwordEncoder = $passwordEncoder;
+        $this->jwtService = $jwtService;
     }
 
     public function supports(Request $request)
     {
-        return $request->get("_route") === "api_login" && $request->isMethod("POST");
+        return $request->cookies->get("jwt") ? true : false;
     }
 
     public function getCredentials(Request $request)
     {
-        return [
-            'email' => $request->request->get("email"),
-            'password' => $request->request->get("password")
-        ];
+        $cookie = $request->cookies->get("jwt");
+
+        if($result = $this->jwtService->verifyToken($cookie))
+        {
+            return $result;
+        }
+        else
+        {
+            $error = $this->jwtService->getError();
+        }
+
+        throw new CustomUserMessageAuthenticationException($error);
+
     }
 
     public function getUser($credentials, UserProviderInterface $userProvider)
@@ -41,7 +54,7 @@ class LoginAuthenticator extends AbstractGuardAuthenticator
 
     public function checkCredentials($credentials, UserInterface $user)
     {
-        return $this->passwordEncoder->isPasswordValid($user, $credentials['password']);
+        return $user->getId() === $credentials['user_id'];
     }
 
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception)
@@ -53,35 +66,17 @@ class LoginAuthenticator extends AbstractGuardAuthenticator
 
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, $providerKey)
     {
-        $expireTime = time() + 3600;
-        $tokenPayload = [
-            'user_id' => $token->getUser()->getId(),
-            'email'   => $token->getUser()->getEmail(),
-            'exp'     => $expireTime
-        ];
+        // Allow request to continue
 
-        $jwt = JWT::encode($tokenPayload, getenv("JWT_SECRET"));
-
-        // If you are developing on a non-https server, you will need to set
-        // the $useHttps variable to false
-
-        $useHttps = true;
-        setcookie("jwt", $jwt, $expireTime, "", "127.0.0.1", $useHttps, true);
-
-        return new JsonResponse([
-            'result' => true
-        ]);
     }
 
     public function start(Request $request, AuthenticationException $authException = null)
     {
-        return new JsonResponse([
-            'error' => 'Access Denied'
-        ]);
+
     }
 
     public function supportsRememberMe()
     {
-        return false;
+
     }
 }
