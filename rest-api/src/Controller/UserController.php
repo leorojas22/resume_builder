@@ -7,10 +7,13 @@ use Doctrine\ORM\EntityManager;
 use Symfony\Component\HttpFoundation\Request;
 use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
+use App\Service\ValidationService;
+use App\Service\Entity\UserService;
 
 
 
@@ -20,55 +23,19 @@ class UserController extends AbstractController
     /**
      * @Route("/register", name="api_register", methods={"POST"})
      */
-    public function register(ObjectManager $om, UserPasswordEncoderInterface $passwordEncoder, Request $request)
+    public function register(Request $request, UserService $userService)
     {
 
-        $user = new User();
-
-        $email                  = $request->request->get("email");
-        $password               = $request->request->get("password");
-        $passwordConfirmation   = $request->request->get("password_confirmation");
-
-        $errors = [];
-        if($password != $passwordConfirmation)
+        if($userService->create($request->request->all()))
         {
-            $errors[] = "Password does not match the password confirmation.";
-        }
-
-        if(strlen($password) < 6)
-        {
-            $errors[] = "Password should be at least 6 characters.";
-        }
-
-        if(!$errors)
-        {
-            $encodedPassword = $passwordEncoder->encodePassword($user, $password);
-            $user->setEmail($email);
-            $user->setPassword($encodedPassword);
-
-            try
-            {
-                $om->persist($user);
-                $om->flush();
-
-                return $this->json([
-                    'user' => $user
-                ]);
-            }
-            catch(UniqueConstraintViolationException $e)
-            {
-                $errors[] = "The email provided already has an account!";
-            }
-            catch(\Exception $e)
-            {
-                $errors[] = "Unable to save new user at this time.";
-            }
-
+            return $this->json([
+                'user' => $userService->getUser()
+            ]);
         }
 
 
         return $this->json([
-            'errors' => $errors
+            'errors' => $userService->getErrors()
         ], 400);
 
     }
