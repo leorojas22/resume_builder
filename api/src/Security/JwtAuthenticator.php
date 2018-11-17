@@ -13,10 +13,18 @@ use Symfony\Component\Security\Guard\AbstractGuardAuthenticator;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException;
-
+use App\Service\JwtService;
 
 class JwtAuthenticator extends AbstractGuardAuthenticator
 {
+
+    private $jwtService;
+
+    public function __construct(JwtService $jwtService)
+    {
+        $this->jwtService = $jwtService;
+    }
+
     public function supports(Request $request)
     {
         return $request->cookies->get("jwt") ? true : false;
@@ -26,33 +34,14 @@ class JwtAuthenticator extends AbstractGuardAuthenticator
     {
         $cookie = $request->cookies->get("jwt");
 
-        // Default error message
-        $error = "Unable to validate session.";
-
-        try
+        if($result = $this->jwtService->verifyToken($cookie))
         {
-            $decodedJwt = JWT::decode($cookie, getenv("JWT_SECRET"), ['HS256']);
-            return [
-                'user_id' => $decodedJwt->user_id,
-                'email' => $decodedJwt->email
-            ];
+            return $result;
         }
-        catch(ExpiredException $e)
+        else
         {
-            $error = "Session has expired.";
+            $error = $this->jwtService->getError();
         }
-        catch(SignatureInvalidException $e)
-        {
-            // In this case, you may also want to send an email to yourself with the JWT
-            // If someone uses a JWT with an invalid signature, it could
-            // be a hacking attempt.
-            $error = "Attempting access invalid session.";
-        }
-        catch(\Exception $e)
-        {
-           // Use the default error message
-        }
-
 
         throw new CustomUserMessageAuthenticationException($error);
 
