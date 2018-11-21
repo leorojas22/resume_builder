@@ -9,13 +9,20 @@ use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use Gedmo\Mapping\Annotation as Gedmo;
+use Gedmo\Timestampable\Traits\TimestampableEntity;
+use Gedmo\SoftDeleteable\Traits\SoftDeleteableEntity;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\UserRepository")
  * @UniqueEntity(fields={"email"}, message="This email is already in use.")
+ * @Gedmo\SoftDeleteable()
  */
 class User implements UserInterface
 {
+    use TimestampableEntity;
+    use SoftDeleteableEntity;
+
     /**
      * @ORM\Id()
      * @ORM\GeneratedValue()
@@ -64,9 +71,15 @@ class User implements UserInterface
      */
     private $phones;
 
+    /**
+     * @ORM\OneToMany(targetEntity="App\Entity\Resume", mappedBy="user", orphanRemoval=true)
+     */
+    private $resumes;
+
     public function __construct()
     {
         $this->phones = new ArrayCollection();
+        $this->resumes = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -213,6 +226,37 @@ class User implements UserInterface
             // set the owning side to null (unless already changed)
             if ($phone->getUser() === $this) {
                 $phone->setUser(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Resume[]
+     */
+    public function getResumes(): Collection
+    {
+        return $this->resumes;
+    }
+
+    public function addResume(Resume $resume): self
+    {
+        if (!$this->resumes->contains($resume)) {
+            $this->resumes[] = $resume;
+            $resume->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeResume(Resume $resume): self
+    {
+        if ($this->resumes->contains($resume)) {
+            $this->resumes->removeElement($resume);
+            // set the owning side to null (unless already changed)
+            if ($resume->getUser() === $this) {
+                $resume->setUser(null);
             }
         }
 

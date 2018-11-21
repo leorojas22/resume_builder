@@ -7,6 +7,7 @@
         "ext-iconv": "*",
         "firebase/php-jwt": "^5.0",
         "sensio/framework-extra-bundle": "^5.2",
+        "stof/doctrine-extensions-bundle": "^1.3",
         "symfony/console": "*",
         "symfony/flex": "^1.1",
         "symfony/framework-bundle": "*",
