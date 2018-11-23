@@ -6,13 +6,13 @@ use App\Service\ValidationService;
 
 
 
-class BaseEntityService
+abstract class BaseEntityService
 {
-    private $entityClass;
-    private $om;
-    private $validator;
-    private $errors = [];
-    private $entity;
+    protected $entityClass;
+    protected $om;
+    protected $validator;
+    protected $errors = [];
+    protected $entity;
 
     public function __construct(ObjectManager $om, ValidationService $validator)
     {
@@ -31,11 +31,13 @@ class BaseEntityService
         foreach($properties as $property => $value)
         {
             $setterMethod = "set".$property;
-            if(method_exists($entity, $setterMethod))
+            if(method_exists($this->entity, $setterMethod))
             {
                 $this->entity->$setterMethod($value);
             }
         }
+
+        return $this;
     }
 
     public function save()

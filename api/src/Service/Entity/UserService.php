@@ -6,25 +6,20 @@ use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use App\Service\ValidationService;
 use App\Entity\User;
 
-class UserService
+class UserService extends BaseEntityService
 {
-    private $validator;
-    private $om;
     private $passwordEncoder;
-    private $errors = [];
-    private $user;
+    protected $entityClass = User::class;
 
-
-    public function __construct(ValidationService $validator, ObjectManager $om, UserPasswordEncoderInterface $passwordEncoder)
+    public function __construct(ObjectManager $om, ValidationService $validator, UserPasswordEncoderInterface $passwordEncoder)
     {
-        $this->validator       = $validator;
-        $this->om              = $om;
+        parent::__construct($om, $validator);
         $this->passwordEncoder = $passwordEncoder;
     }
 
     public function create($properties = [])
     {
-        $email                = isset($properties['email']) ? $properties['email'] : "";
+        parent::create($properties);
         $password             = isset($properties['password']) ? $properties['password'] : "";
         $passwordConfirmation = isset($properties['password_confirmation']) ? $properties['password_confirmation'] : "";
 
@@ -41,39 +36,13 @@ class UserService
 
         if(!$errors)
         {
-            $user = new User();
-            $encodedPassword = $this->passwordEncoder->encodePassword($user, $password);
-            $user->setEmail($email);
-            $user->setPassword($encodedPassword);
-
-            $isValid = $this->validator->validate($user);
-            if($isValid)
-            {
-                // Save entity
-                $this->om->persist($user);
-                $this->om->flush();
-
-                $this->user = $user;
-                return true;
-            }
-            else
-            {
-                $errors = $this->validator->getErrors();
-            }
+            $encodedPassword = $this->passwordEncoder->encodePassword($this->getEntity(), $password);
+            $this->getEntity()->setPassword($encodedPassword);
         }
 
         $this->errors = $errors;
 
-        return false;
+        return $this;
     }
 
-    public function getUser()
-    {
-        return $this->user;
-    }
-
-    public function getErrors()
-    {
-        return $this->errors;
-    }
 }

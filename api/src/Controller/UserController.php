@@ -25,10 +25,10 @@ class UserController extends AbstractController
     public function register(Request $request, UserService $userService)
     {
 
-        if($userService->create($request->request->all()))
+        if($userService->create($request->request->all())->save())
         {
             return $this->json([
-                'user' => $userService->getUser()
+                'user' => $userService->getEntity()
             ]);
         }
 
