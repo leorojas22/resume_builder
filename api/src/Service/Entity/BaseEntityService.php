@@ -27,13 +27,26 @@ abstract class BaseEntityService
 
     public function create($properties = [])
     {
-        $this->entity = new $this->entityClass();
-        foreach($properties as $property => $value)
+        $this->setEntity(new $this->entityClass());
+        return $this->setProperties($properties);
+    }
+
+    public function setProperties($properties = [])
+    {
+        if($this->getEntity())
         {
-            $setterMethod = "set".$property;
-            if(method_exists($this->entity, $setterMethod))
+            foreach($properties as $property => $value)
             {
-                $this->entity->$setterMethod($value);
+                if(strtolower($property) === "id")
+                {
+                    continue;
+                }
+
+                $setterMethod = "set".$property;
+                if(method_exists($this->getEntity(), $setterMethod))
+                {
+                    $this->getEntity()->$setterMethod($value);
+                }
             }
         }
 
@@ -76,7 +89,7 @@ abstract class BaseEntityService
 
     public function setEntity($entity)
     {
-        if(is_a($entity, $this->entityClass))
+        if(!is_a($entity, $this->entityClass))
         {
             throw new \Exception("Setting invalid entity.  Expecting entity to be of type: ".$this->entityClass);
         }

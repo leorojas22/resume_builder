@@ -3,12 +3,16 @@
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
-use Gedmo\Timestampable\Traits\TimestampableEntity;
-use Gedmo\SoftDeleteable\Traits\SoftDeleteableEntity;
 use Gedmo\Mapping\Annotation as Gedmo;
+use Gedmo\Timestampable\Traits\TimestampableEntity;
+use Symfony\Component\Serializer\Annotation\Groups;
+use Gedmo\SoftDeleteable\Traits\SoftDeleteableEntity;
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\AddressRepository")
+ * @UniqueEntity(fields={"user"}, message="This user already has an address.")
  * @Gedmo\SoftDeleteable()
  */
 class Address
@@ -21,37 +25,53 @@ class Address
      * @ORM\Id()
      * @ORM\GeneratedValue()
      * @ORM\Column(type="integer")
+     * @Groups("api")
      */
     private $id;
 
     /**
      * @ORM\Column(type="string", length=255)
+     * @Assert\NotBlank(message = "Address line 1 may not be blank.")
+     * @Assert\Length(min = 0, max = 255, maxMessage = "Address line 1 cannot exceed {{ limit }} characters.")
+     * @Groups("api")
      */
     private $line1;
 
     /**
      * @ORM\Column(type="string", length=255)
+     * @Assert\Length(min = 0, max = 255, maxMessage = "Address line 2 cannot exceed {{ limit }} characters.")
+     * @Groups("api")
      */
-    private $line2;
+    private $line2 = "";
 
     /**
      * @ORM\Column(type="string", length=255)
+     * @Assert\NotBlank(message = "City may not be blank.")
+     * @Assert\Length(min = 0, max = 255, maxMessage = "City cannot exceed {{ limit }} characters.")
+     * @Groups("api")
      */
     private $city;
 
     /**
      * @ORM\Column(type="string", length=2)
+     * @Assert\NotBlank(message = "State may not be blank.")
+     * @Assert\Length(min = 2, max = 2, exactMessage = "State is required to be {{ limit }} characters.")
+     * @Groups("api")
      */
     private $state;
 
     /**
      * @ORM\Column(type="string", length=10)
+     * @Assert\NotBlank(message = "Postal code may not be blank.")
+     * @Assert\Length(min = 5, max = 10, minMessage = "Postal code must be at least {{ limit }} characters.", maxMessage = "Postal code cannot exceed {{ limit }} characters.")
+     * @Groups("api")
      */
     private $postal_code;
 
     /**
      * @ORM\OneToOne(targetEntity="App\Entity\User", inversedBy="address", cascade={"persist", "remove"})
      * @ORM\JoinColumn(nullable=false)
+     * @Groups("api")
      */
     private $user;
 
