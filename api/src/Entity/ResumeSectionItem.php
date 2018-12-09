@@ -3,9 +3,11 @@
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
-use Gedmo\Timestampable\Traits\TimestampableEntity;
-use Gedmo\SoftDeleteable\Traits\SoftDeleteableEntity;
 use Gedmo\Mapping\Annotation as Gedmo;
+use Gedmo\Timestampable\Traits\TimestampableEntity;
+use Symfony\Component\Serializer\Annotation\Groups;
+use Gedmo\SoftDeleteable\Traits\SoftDeleteableEntity;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\ResumeSectionItemRepository")
@@ -20,17 +22,22 @@ class ResumeSectionItem
      * @ORM\Id()
      * @ORM\GeneratedValue()
      * @ORM\Column(type="integer")
+     * @Groups("api")
      */
     private $id;
 
     /**
      * @ORM\Column(type="text")
+     * Assert\NotBlank(message = "Content may not be blank.")
+     * @Groups("api")
      */
     private $content;
 
     /**
      * @Gedmo\SortablePosition
      * @ORM\Column(type="integer")
+     * Assert\NotBlank(message = "Position may not be blank.")
+     * @Groups("api")
      */
     private $position;
 

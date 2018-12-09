@@ -101,4 +101,26 @@ abstract class BaseEntityService
     {
         return $this->entity;
     }
+
+    public function deleteEntity($entity = false)
+    {
+        if($entity)
+        {
+            $this->setEntity($entity);
+        }
+
+
+        if($this->getEntity())
+        {
+            $this->om->remove($this->getEntity());
+            $this->om->flush();
+            return true;
+        }
+        else
+        {
+            $this->errors[] = "You must first set an entity before deleting it!";
+        }
+
+        return false;
+    }
 }

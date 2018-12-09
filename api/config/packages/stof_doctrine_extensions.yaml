@@ -6,6 +6,7 @@ stof_doctrine_extensions:
         default:
             softdeleteable: true
             timestampable: true
+            sortable: true
 doctrine:
     orm:
         entity_managers:

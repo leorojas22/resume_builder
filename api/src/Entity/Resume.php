@@ -2,12 +2,14 @@
 
 namespace App\Entity;
 
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use Gedmo\Timestampable\Traits\TimestampableEntity;
-use Gedmo\SoftDeleteable\Traits\SoftDeleteableEntity;
 use Gedmo\Mapping\Annotation as Gedmo;
+use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\ArrayCollection;
+use Gedmo\Timestampable\Traits\TimestampableEntity;
+use Symfony\Component\Serializer\Annotation\Groups;
+use Gedmo\SoftDeleteable\Traits\SoftDeleteableEntity;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\ResumeRepository")
@@ -23,22 +25,28 @@ class Resume
      * @ORM\Id()
      * @ORM\GeneratedValue()
      * @ORM\Column(type="integer")
+     * @Groups("api")
      */
     private $id;
 
     /**
      * @ORM\Column(type="string", length=255)
+     * Assert\NotBlank(message = "Name may not be blank.")
+     * Assert\Length(min = 0, max = 255, maxMessage = "Name cannot exceed {{ limit }} characters.")
+     * @Groups("api")
      */
     private $name;
 
     /**
      * @ORM\ManyToOne(targetEntity="App\Entity\User", inversedBy="resumes")
      * @ORM\JoinColumn(nullable=false)
+     * @Groups("api")
      */
     private $user;
 
     /**
      * @ORM\OneToMany(targetEntity="App\Entity\ResumeSection", mappedBy="resume", orphanRemoval=true)
+     * @Groups("api")
      */
     private $resumeSections;
 

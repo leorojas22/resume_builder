@@ -2,12 +2,14 @@
 
 namespace App\Entity;
 
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use Gedmo\Timestampable\Traits\TimestampableEntity;
-use Gedmo\SoftDeleteable\Traits\SoftDeleteableEntity;
 use Gedmo\Mapping\Annotation as Gedmo;
+use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\ArrayCollection;
+use Gedmo\Timestampable\Traits\TimestampableEntity;
+use Symfony\Component\Serializer\Annotation\Groups;
+use Gedmo\SoftDeleteable\Traits\SoftDeleteableEntity;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\ResumeSectionRepository")
@@ -22,17 +24,22 @@ class ResumeSection
      * @ORM\Id()
      * @ORM\GeneratedValue()
      * @ORM\Column(type="integer")
+     * @Groups("api")
      */
     private $id;
 
     /**
      * @ORM\Column(type="string", length=255)
+     * Assert\NotBlank(message = "Title may not be blank.")
+     * Assert\Length(min = 0, max = 255, maxMessage = "Title cannot exceed {{ limit }} characters.")
+     * @Groups("api")
      */
     private $title;
 
     /**
      * @Gedmo\SortablePosition
      * @ORM\Column(type="integer")
+     * @Groups("api")
      */
     private $position;
 
@@ -40,11 +47,13 @@ class ResumeSection
      * @Gedmo\SortableGroup
      * @ORM\ManyToOne(targetEntity="App\Entity\Resume", inversedBy="resumeSections")
      * @ORM\JoinColumn(nullable=false)
+     * Assert\NotBlank(message = "Resume is required.")
      */
     private $resume;
 
     /**
      * @ORM\OneToMany(targetEntity="App\Entity\ResumeSectionItem", mappedBy="resumeSection", orphanRemoval=true)
+     * @Groups("api")
      */
     private $resumeSectionItems;
 
@@ -70,14 +79,14 @@ class ResumeSection
         return $this;
     }
 
-    public function getProperty(): ?int
+    public function getPosition(): ?int
     {
-        return $this->property;
+        return $this->position;
     }
 
-    public function setProperty(int $property): self
+    public function setPosition(int $position): self
     {
-        $this->property = $property;
+        $this->position = $position;
 
         return $this;
     }
